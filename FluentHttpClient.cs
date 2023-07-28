@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 
@@ -133,6 +134,25 @@ public class FluentHttpClient
     #region Fluent functions
 
     /// <summary>
+    /// Add content (payload) to request.
+    /// </summary>
+    /// <param name="content">Content to add.</param>
+    /// <param name="contentType">Content media type.</param>
+    /// <param name="encoding">Content encoding.</param>
+    /// <returns>Fluent HTTP client instance.</returns>
+    public FluentHttpClient AddContent(
+        object content,
+        string? contentType = null,
+        Encoding? encoding = null)
+    {
+        this.Content = content;
+        this.ContentType = contentType;
+        this.ContentEncoding = encoding;
+
+        return this;
+    }
+
+    /// <summary>
     /// Add a cookie to request.
     /// </summary>
     /// <param name="cookie">Cookie to add.</param>
@@ -190,25 +210,6 @@ public class FluentHttpClient
     }
 
     /// <summary>
-    /// Add content (payload) to request.
-    /// </summary>
-    /// <param name="content">Content to add.</param>
-    /// <param name="contentType">Content media type.</param>
-    /// <param name="encoding">Content encoding.</param>
-    /// <returns>Fluent HTTP client instance.</returns>
-    public FluentHttpClient AddContent(
-        object content,
-        string? contentType = null,
-        Encoding? encoding = null)
-    {
-        this.Content = content;
-        this.ContentType = contentType;
-        this.ContentEncoding = encoding;
-
-        return this;
-    }
-
-    /// <summary>
     /// Set JSON serialization and deserialization options.
     /// </summary>
     /// <param name="options">Options to set.</param>
@@ -254,7 +255,7 @@ public class FluentHttpClient
 
     #endregion
 
-    #region Request executor functions
+    #region Request function
 
     /// <summary>
     /// Perform request.
@@ -387,11 +388,7 @@ public class FluentHttpClient
         }
         else
         {
-            var bytes = await res.Content.ReadAsByteArrayAsync(ctoken);
-
-            return JsonSerializer.Deserialize<T>(
-                bytes,
-                this.JsonSerializerOptions);
+            return await res.Content.ReadFromJsonAsync<T>(this.JsonSerializerOptions, ctoken);
         }
     }
 
